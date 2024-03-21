@@ -1,28 +1,29 @@
 const { clipboard, ipcRenderer } = require("electron")
-const list = []
+const list = {}
 
 const listenClipboardCallback = () => {
   const text = clipboard.readText('clipboard')
   const _text = text.trim()
-  if(_text && list.indexOf(_text) === -1){
-    list.push(_text)
-    addCopyNode(_text)
+  if(_text && Object.values(list).indexOf(_text) === -1){
+    const copyTag = crypto.randomUUID()
+    list[copyTag] = _text
+    addCopyNode(_text, copyTag)
   }
 }
 
-const addCopyNode = (text) => {
+const addCopyNode = (text, tag) => {
   const dom = document.getElementById('content')
-  if(dom && dom.appendChild){
+  if(dom && dom.appendChild && dom.insertBefore){
     const copy = document.createElement('div')
     copy.innerText = text
     copy.classList.add('copy')
-    copy.copyTag = list.length - 1
+    copy.copyTag = tag
     copy.addEventListener('click', () => {
       clipboard.writeText(list[copy.copyTag])
       showDialog('复制成功!')
-      // ipcRenderer.send('copy')
     })
-    dom.appendChild(copy)
+    const children = dom.childNodes
+    children.length ? dom.insertBefore(copy,children[0]) : dom.appendChild(copy)
   }
 }
 
